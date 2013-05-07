@@ -1,0 +1,57 @@
+#!/usr/bin/python
+
+import os
+
+# Bootstrapping...
+
+try:
+    import bpy
+except:
+    returncode = 0
+    if __name__ == "__main__":
+        import subprocess, sys
+        if len(sys.argv) > 1 and sys.argv[1].endswith(".blend"):
+            returncode = subprocess.call(["blender", sys.argv[1], "--python", os.path.abspath(sys.argv[0])]) 
+        else:
+            returncode = subprocess.call(["blender", "--python", os.path.abspath(sys.argv[0])])
+    exit(returncode)
+
+# Where in Blender now...
+
+Scene = bpy.context.scene
+Scene.use_nodes = True
+
+def addClip(parent, clip_file_path, clip_start_frame, clip_end_frame, clip_start_at = 0):
+    Clip = parent.nodes.new('IMAGE')
+    Clip.image = bpy.data.images.load(clip_file_path)
+    Clip.name = os.path.basename(clip_file_path)
+    Clip.frame_duration = clip_end_frame - clip_start_frame # the clip duration
+    Clip.frame_offset = clip_start_frame # the clip frame to be the first frame
+    Clip.frame_start = clip_start_at # the relative sequence frame to start play clip on
+    Clip.use_auto_refresh = True
+    return Clip
+
+f = open(os.path.expanduser("~/sources-list.txt"), "r")
+location = [0,300]
+parent = Scene.node_tree
+sequence_frame = 0
+track_frame = 0
+for line in iter(f):
+    if line.startswith("Track"):
+        track_frame = 0
+        token = line.split()
+        track_name = token[2]
+        location[1] -= 300
+    else:
+        token = line.split()
+        clip_file_path = token[0]
+        clip_start_frame = int(token[3])
+        clip_end_frame = int(token[5])
+        clip = addClip(parent, clip_file_path, clip_start_frame, clip_end_frame, track_frame)
+        clip.location = location
+        location[0] += 150
+        track_frame += clip_end_frame - clip_start_frame
+        sequence_frame = max(track_frame, sequence_frame)
+Scene.frame_start = 0
+Scene.frame_end = sequence_frame
+f.close()
