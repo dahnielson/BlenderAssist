@@ -16,7 +16,7 @@ except:
             returncode = subprocess.call(["blender", "--python", os.path.abspath(sys.argv[0])])
     exit(returncode)
 
-# Where in Blender now...
+# We're in Blender now...
 
 Scene = bpy.context.scene
 Scene.use_nodes = True
