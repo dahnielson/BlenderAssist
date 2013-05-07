@@ -5,7 +5,7 @@ BlenderAssist is a collection of Python scripts that turn Blender into an
 Assistant Application for Lightworks (see p. 137 in the "Lightworks v11 
 User Guide" for details).
 
-Currentky available scripts:
+Currently available scripts:
 
 - BlenderCompAssist: Load the clips into the Blender compositor
 
