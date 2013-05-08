@@ -3,20 +3,24 @@ BlenderAssist
 
 BlenderAssist is a collection of Python scripts that turn Blender into an 
 Assistant Application for Lightworks (see p. 137 in the "Lightworks v11 
-User Guide" for details).
+User Guide" for details).[1]
 
 Currently available scripts:
 
-- BlenderCompAssist: Load the clips into the Blender compositor
+- BlenderCompAssist: Load clips from the edit into the Blender compositor 
+                     and set up the correct duration, start and offset.
 
 
 Installation
 ------------
 
 Preferable copy the BlenderAssist script files into the "~/Lightworks/
-Effect Templates" directory in your user home directory. The scripts are
-currently named with a .exe suffix despite being Python pure scripts, the
-reason being a bug in Lightworks filtering of the file browser.
+Effect Templates" directory in your user home directory. Give the scripts
+executable file permission.
+
+N.B.: The scripts are currently named with a .exe suffix despite being Python 
+pure scripts, the reason being a bug in Lightworks filtering of the file 
+browser. [2] 
 
 To add a BlenderAssist script, open the Effect dialog box in Lightworks,
 select Assistant Application, click add and browse to the Effect Templates
@@ -35,3 +39,7 @@ Click the List Sources button in the configuration dialog to generate the
 
 To launch Blender as Assistant Application, click the Launch button in the
 configuration dialog.
+
+
+[1] http://www.lwks.com/index.php?option=com_docman&task=doc_download&gid=22&Itemid=189
+[2] http://dev.lwks.com/issues/91
