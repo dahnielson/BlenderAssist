@@ -10,10 +10,26 @@ except:
     returncode = 0
     if __name__ == "__main__":
         import subprocess, sys
-        if len(sys.argv) > 1 and sys.argv[1].endswith(".blend"):
-            returncode = subprocess.call(["blender", sys.argv[1], "--python", os.path.abspath(sys.argv[0])]) 
-        else:
-            returncode = subprocess.call(["blender", "--python", os.path.abspath(sys.argv[0])])
+
+        try:   #splits command line argument into 2, assuming multiple arguments
+            Arg1, Arg2 = " ".join(sys.argv).split("BlenderCompAssist.py ")
+            Arg1 += "BlenderCompAssist.py"
+        except: #creates 2 arguments in an exception
+            Arg1 = " ".join(sys.argv)
+            Arg2 = ""
+        Folder = os.getcwd() #get the working directory
+
+        if len(sys.argv) > 1 and Arg2.endswith(".blend"):  # if second argument exists, run it
+            returncode = subprocess.call(["open", "-a", "blender", "--args", Arg2, "--python", os.path.abspath(Arg1)])
+            exit(returncode)
+        else: #tries to find nearby .blend if second argument doesn't exist
+            for file in os.listdir(Folder):
+                if file.endswith(".blend"):
+                    Arg2 = Folder + "/" + file
+                    returncode = subprocess.call(["open", "-a", "blender", "--args", Arg2, "--python", os.path.abspath(Arg1)])
+                    exit(returncode)
+
+        returncode = subprocess.call(["open", "-a", "blender", "--args", "--python", os.path.abspath(sys.argv[0])]) #fallback
     exit(returncode)
 
 # We're in Blender now...
@@ -21,17 +37,23 @@ except:
 Scene = bpy.context.scene
 Scene.use_nodes = True
 
-def addClip(parent, clip_file_path, clip_start_frame, clip_end_frame, clip_start_at = 0):
-    Clip = parent.nodes.new('IMAGE')
-    Clip.image = bpy.data.images.load(clip_file_path)
-    Clip.name = os.path.basename(clip_file_path)
-    Clip.frame_duration = clip_end_frame - clip_start_frame # the clip duration
+
+def addClip(clip_file_path, clip_start_frame):
+    Clip = bpy.data.movieclips.load(clip_file_path) #load new movie clip
     Clip.frame_offset = clip_start_frame # the clip frame to be the first frame
-    Clip.frame_start = clip_start_at # the relative sequence frame to start play clip on
-    Clip.use_auto_refresh = True
     return Clip
 
-f = open(os.path.expanduser("~/sources-list.txt"), "r")
+def addNode(parent, clip_file_path, clip_start_frame, clip_end_frame, clip_start_at = 0):
+    Node = parent.nodes.new('CompositorNodeImage')
+    Node.image = bpy.data.images.load(clip_file_path)
+    Node.name = os.path.basename(clip_file_path)
+    Node.frame_duration = clip_end_frame - clip_start_frame # the clip duration
+    Node.frame_offset = clip_start_frame # the clip frame to be the first frame
+    Node.frame_start = clip_start_at # the relative sequence frame to start play clip on
+    Node.use_auto_refresh = True
+    return Node
+
+f = open(os.path.expanduser("~/Lightworks/Projects/sources-list.txt"), "r")
 location = [0,300]
 parent = Scene.node_tree
 sequence_frame = 0
@@ -43,12 +65,14 @@ for line in iter(f):
         track_name = token[2]
         location[1] -= 300
     else:
-        token = line.split()
-        clip_file_path = token[0]
-        clip_start_frame = int(token[3])
-        clip_end_frame = int(token[5])
-        clip = addClip(parent, clip_file_path, clip_start_frame, clip_end_frame, track_frame)
-        clip.location = location
+        path, frames = line.split(""" ( Frames """)
+        token = frames.split()
+        clip_file_path = path
+        clip_start_frame = int(token[0])
+        clip_end_frame = int(token[2])
+        Node = addNode(parent, clip_file_path, clip_start_frame, clip_end_frame, track_frame)
+        addClip(clip_file_path, clip_start_frame)
+        Node.location = location
         location[0] += 150
         track_frame += clip_end_frame - clip_start_frame
         sequence_frame = max(track_frame, sequence_frame)
